@@ -14,10 +14,10 @@ export class WAConnection extends Base {
         if (this.state !== 'close') {
             throw new BaileysError('cannot connect when state=' + this.state, { status: 409 })
         }
-        
+
         const options = this.connectOptions
         const newConnection = !this.authInfo
-        
+
         this.state = 'connecting'
         this.emit ('connecting')
 
@@ -29,7 +29,7 @@ export class WAConnection extends Base {
             try {
                 const diff = lastConnect ? new Date().getTime()-lastConnect.getTime() : Infinity
                 updates = await this.connectInternal (
-                    options, 
+                    options,
                     diff > this.connectOptions.connectCooldownMs ? 0 : this.connectOptions.connectCooldownMs
                 )
                 this.phoneConnected = true
@@ -51,7 +51,7 @@ export class WAConnection extends Base {
         }
         const result: WAOpenResult = { user: this.user, newConnection, ...(updates || {}) }
         this.emit ('open', result)
-        
+
         this.logger.info ('opened connection to WhatsApp Web')
 
         this.conn.on ('close', () => this.unexpectedDisconnect (DisconnectReason.close))
@@ -68,14 +68,14 @@ export class WAConnection extends Base {
             new Promise((resolve, reject) => {
                 rejections.push (reject)
                 // determine whether reconnect should be used or not
-                const shouldUseReconnect = (this.lastDisconnectReason === DisconnectReason.close || 
+                const shouldUseReconnect = (this.lastDisconnectReason === DisconnectReason.close ||
                                             this.lastDisconnectReason === DisconnectReason.lost) &&
                                             !this.connectOptions.alwaysUseTakeover
                 const reconnectID = shouldUseReconnect && this.user.jid.replace ('@s.whatsapp.net', '@c.us')
 
                 this.conn = new WS(WS_URL, null, {
-                    origin: DEFAULT_ORIGIN, 
-                    timeout: this.connectOptions.maxIdleTimeMs, 
+                    origin: DEFAULT_ORIGIN,
+                    timeout: this.connectOptions.maxIdleTimeMs,
                     agent: options.agent,
                     headers: {
                         'Accept-Encoding': 'gzip, deflate, br',
@@ -88,7 +88,7 @@ export class WAConnection extends Base {
                 })
 
                 this.conn.on('message', data => this.onMessageRecieved(data as any))
-                
+
                 this.conn.once('open', async () => {
                     this.startKeepAliveRequest()
                     this.logger.info(`connected to WhatsApp Web server, authenticating via ${reconnectID ? 'reconnect' : 'takeover'}`)
@@ -102,12 +102,12 @@ export class WAConnection extends Base {
                     }
                     try {
                         const [authResult, chatsResult] = await Promise.all (
-                            [ 
+                            [
                                 this.authenticate(reconnectID),
                                 waitForChats || undefined
                             ]
                         )
-                        
+
                         this.conn
                             .removeAllListeners('error')
                             .removeAllListeners('close')
@@ -162,10 +162,10 @@ export class WAConnection extends Base {
             events.map (ev => {
                 const {reject, task} = rejectableWaitForEvent(ev)
                 cancellations.push(reject)
-                return task 
+                return task
             })
         ).then(([update]) => update as { hasNewChats: boolean })
-        
+
         return { wait, cancellations }
     }
     private onMessageRecieved(message: string | Buffer) {
@@ -183,13 +183,13 @@ export class WAConnection extends Base {
                 json = dec[1]
             } catch (error) {
                 this.logger.error ({ error }, `encountered error in decrypting message, closing: ${error}`)
-                
+
                 if (this.state === 'open') this.unexpectedDisconnect (DisconnectReason.badSession)
                 else this.emit ('ws-close', new Error(DisconnectReason.badSession))
             }
 
             if (this.shouldLogMessages) this.messageLog.push ({ tag: messageTag, json: JSON.stringify(json), fromMe: false })
-            if (!json) return 
+            if (!json) return
 
             if (this.logger.level === 'trace') {
                 this.logger.trace(messageTag + ',' + JSON.stringify(json))
@@ -217,6 +217,10 @@ export class WAConnection extends Base {
                     return
                 }
             }
+
+            if( json.status && UNAUTHORIZED_CODES.includes(json.status))
+                    this.closeInternal(DisconnectReason.invalidSession)
+
             if (this.logger.level === 'debug') {
                 this.logger.debug({ unhandled: true }, messageTag + ',' + JSON.stringify(json))
             }
