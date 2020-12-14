@@ -54,7 +54,7 @@ export declare function getMediaKeys(buffer: any, mediaType: MessageType): {
     cipherKey: Buffer;
     macKey: Buffer;
 };
-export declare const compressImage: (buffer: Buffer) => Promise<Buffer>;
+export declare const compressImage: (buffer: Buffer) => Promise<any>;
 export declare const generateProfilePicture: (buffer: Buffer) => Promise<{
     img: Buffer;
     preview: Buffer;
