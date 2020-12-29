@@ -1,5 +1,5 @@
 import { WAConnection as Base } from './6.MessagesSend';
-import { WAMessageKey, MessageInfo, WAMessage, WAMessageProto, ChatModification } from './Constants';
+import { WAMessageKey, MessageInfo, WAMessage, WAMessageProto, ChatModification, WAChatIndex } from './Constants';
 export declare class WAConnection extends Base {
     loadAllUnreadMessages(): Promise<WAMessageProto.WebMessageInfo[]>;
     /** Get the message info, who has read it, who its been delivered to */
@@ -13,6 +13,7 @@ export declare class WAConnection extends Base {
     /**
      * Sends a read receipt for a given message;
      * does not update the chat do @see chatRead
+     * @deprecated just use chatRead()
      * @param jid the ID of the person/group whose message you want to mark read
      * @param messageKey the key of the message
      * @param count number of messages to read, set to < 0 to unread a message
@@ -78,11 +79,18 @@ export declare class WAConnection extends Base {
         status: number;
     }>;
     /**
+     * Star or unstar a message
+     * @param messageKey key of the message you want to star or unstar
+     */
+    starMessage(messageKey: WAMessageKey, type?: 'star' | 'unstar'): Promise<{
+        status: number;
+    }>;
+    /**
      * Delete a message in a chat for everyone
      * @param id the person or group where you're trying to delete the message
      * @param messageKey key of the message you want to delete
      */
-    deleteMessage(id: string, messageKey: WAMessageKey): Promise<WAMessageProto.WebMessageInfo>;
+    deleteMessage(k: string | WAMessageKey, messageKey?: WAMessageKey): Promise<WAMessageProto.WebMessageInfo>;
     /**
      * Generate forwarded message content like WA does
      * @param message the message to forward
@@ -104,11 +112,27 @@ export declare class WAConnection extends Base {
         status: number;
     }>;
     /**
+     * Clear the chat messages
+     * @param jid the ID of the person/group you are modifiying
+     * @param includeStarred delete starred messages, default false
+     */
+    modifyChat(jid: string, type: ChatModification.clear, includeStarred?: boolean): Promise<{
+        status: number;
+    }>;
+    /**
      * Modify a given chat (archive, pin etc.)
      * @param jid the ID of the person/group you are modifiying
      * @param durationMs only for muting, how long to mute the chat for
      */
-    modifyChat(jid: string, type: ChatModification | (keyof typeof ChatModification), durationMs?: number): Promise<{
+    modifyChat(jid: string, type: ChatModification.pin | ChatModification.mute, durationMs: number): Promise<{
         status: number;
     }>;
+    /**
+     * Modify a given chat (archive, pin etc.)
+     * @param jid the ID of the person/group you are modifiying
+     */
+    modifyChat(jid: string, type: ChatModification | (keyof typeof ChatModification)): Promise<{
+        status: number;
+    }>;
+    protected getChatIndex(jid: string): Promise<WAChatIndex>;
 }

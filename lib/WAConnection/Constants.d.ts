@@ -6,6 +6,7 @@ import KeyedDB from '@adiwajshing/keyed-db';
 export declare const WS_URL = "wss://web.whatsapp.com/ws";
 export declare const DEFAULT_ORIGIN = "https://web.whatsapp.com";
 export declare const KEEP_ALIVE_INTERVAL_MS: number;
+export declare const WA_DEFAULT_EPHEMERAL: number;
 export { proto as WAMessageProto };
 export declare type WANode = WA.Node;
 export declare type WAMessage = proto.WebMessageInfo;
@@ -152,6 +153,10 @@ export interface WAGroupCreateResponse {
         [key: string]: any;
     }];
 }
+export declare type WAGroupParticipant = (WAContact & {
+    isAdmin: boolean;
+    isSuperAdmin: boolean;
+});
 export interface WAGroupMetadata {
     id: string;
     owner: string;
@@ -164,11 +169,7 @@ export interface WAGroupMetadata {
     restrict?: 'true' | 'false';
     /** is set when the group only allows admins to write messages */
     announce?: 'true' | 'false';
-    participants: {
-        id: string;
-        isAdmin: boolean;
-        isSuperAdmin: boolean;
-    }[];
+    participants: WAGroupParticipant[];
 }
 export interface WAGroupModification {
     status: number;
@@ -204,12 +205,17 @@ export interface WAChat {
     /** number of unread messages, is < 0 if the chat is manually marked unread */
     count: number;
     archive?: 'true' | 'false';
+    clear?: 'true' | 'false';
     read_only?: 'true' | 'false';
     mute?: string;
     pin?: string;
     spam: 'false' | 'true';
     modify_tag: string;
     name?: string;
+    /** when ephemeral messages were toggled on */
+    eph_setting_ts?: string;
+    /** how long each message lasts for */
+    ephemeral?: string;
     messages: KeyedDB<WAMessage, string>;
     imgUrl?: string;
     presences?: {
@@ -217,6 +223,11 @@ export interface WAChat {
     };
     metadata?: WAGroupMetadata;
 }
+export declare type WAChatIndex = {
+    index: string;
+    owner: 'true' | 'false';
+    participant?: string;
+};
 export declare type WAChatUpdate = Partial<WAChat> & {
     jid: string;
     hasNewMessage?: boolean;
@@ -243,6 +254,7 @@ export declare enum WAMetric {
     queryGroup = 19,
     queryPreview = 20,
     queryEmoji = 21,
+    queryRead = 22,
     queryVCard = 29,
     queryStatus = 30,
     queryStatusUpdate = 31,
@@ -299,7 +311,8 @@ export declare enum ChatModification {
     unpin = "unpin",
     mute = "mute",
     unmute = "unmute",
-    delete = "delete"
+    delete = "delete",
+    clear = "clear"
 }
 export declare const HKDFInfoKeys: {
     imageMessage: string;
@@ -350,6 +363,11 @@ export interface MessageOptions {
     forceNewMediaOptions?: boolean;
     /** Wait for the message to be sent to the server (default true) */
     waitForAck?: boolean;
+    /** Should it send as a disappearing messages.
+     * By default 'chat' -- which follows the setting of the chat */
+    sendEphemeral?: 'chat' | boolean;
+    /** Force message id */
+    messageId?: string;
 }
 export interface WABroadcastListInfo {
     status: number;
@@ -409,6 +427,10 @@ export interface PresenceUpdate {
     type?: Presence;
     deny?: boolean;
 }
+export interface BlocklistUpdate {
+    added: string[];
+    removed: string[];
+}
 export declare const MediaPathMap: {
     imageMessage: string;
     videoMessage: string;
@@ -429,4 +451,4 @@ export interface WASendMessageResponse {
     message: WAMessage;
 }
 export declare type WAParticipantAction = 'add' | 'remove' | 'promote' | 'demote';
-export declare type BaileysEvent = 'open' | 'connecting' | 'close' | 'ws-close' | 'qr' | 'connection-phone-change' | 'user-status-update' | 'contacts-received' | 'chats-received' | 'chat-new' | 'chat-update' | 'message-status-update' | 'group-participants-update' | 'group-update' | 'received-pong' | 'credentials-updated' | 'connection-validated';
+export declare type BaileysEvent = 'open' | 'connecting' | 'close' | 'ws-close' | 'qr' | 'connection-phone-change' | 'user-status-update' | 'contacts-received' | 'chats-received' | 'chat-new' | 'chat-update' | 'message-status-update' | 'group-participants-update' | 'group-update' | 'received-pong' | 'credentials-updated' | 'connection-validated' | 'blocklist-update';

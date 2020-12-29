@@ -1,5 +1,5 @@
 import { WAConnection as Base } from './3.Connect';
-import { WAMessageStatusUpdate, WAMessage, WAChat, WA_MESSAGE_STATUS_TYPE, PresenceUpdate, BaileysEvent, DisconnectReason, WAOpenResult, AuthenticationCredentials, WAParticipantAction, WAGroupMetadata, WAUser, WAChatUpdate } from './Constants';
+import { WAMessageStatusUpdate, WAMessage, WAContact, WAChat, WA_MESSAGE_STATUS_TYPE, PresenceUpdate, BaileysEvent, DisconnectReason, WAOpenResult, AuthenticationCredentials, WAParticipantAction, WAGroupMetadata, WAUser, WAChatUpdate, BlocklistUpdate } from './Constants';
 export declare class WAConnection extends Base {
     constructor();
     /** Get the URL to download the profile picture of a person/group */
@@ -8,6 +8,7 @@ export declare class WAConnection extends Base {
     protected forwardStatusUpdate(update: WAMessageStatusUpdate): void;
     /** inserts an empty chat into the DB */
     protected chatAdd(jid: string, name?: string): Promise<WAChat>;
+    protected contactAddOrGet(jid: string): WAContact;
     /** find a chat or return an error */
     protected assertChatGet: (jid: any) => WAChat;
     /** Adds the given message to the appropriate chat, if the chat doesn't exist, it is created */
@@ -16,7 +17,7 @@ export declare class WAConnection extends Base {
     protected emitParticipantsUpdate: (jid: string, participants: string[], action: WAParticipantAction) => void;
     protected emitGroupUpdate: (jid: string, update: Partial<WAGroupMetadata>) => void;
     protected chatUpdatedMessage(messageIDs: string[], status: WA_MESSAGE_STATUS_TYPE, chat: WAChat): void;
-    protected chatUpdateTime: (chat: any, stamp: number) => void;
+    protected chatUpdateTime: (chat: any, stamp: number) => 2 | 1;
     /** sets the profile picture of a chat */
     protected setProfilePicture(chat: WAChat): Promise<void>;
     /** when the connection has opened successfully */
@@ -55,11 +56,17 @@ export declare class WAConnection extends Base {
     /** when a new chat is added */
     on(event: 'chat-new', listener: (chat: WAChat) => void): this;
     /** when contacts are sent by WA */
-    on(event: 'contacts-received', listener: () => void): this;
+    on(event: 'contacts-received', listener: (u: {
+        updatedContacts: Partial<WAContact>[];
+    }) => void): this;
     /** when chats are sent by WA, and when all messages are received */
     on(event: 'chats-received', listener: (update: {
         hasNewChats?: boolean;
         hasReceivedLastMessage?: boolean;
+        chatsWithMissingMessages: {
+            jid: string;
+            count: number;
+        }[];
     }) => void): this;
     /** when multiple chats are updated (new message, updated message, deleted, pinned, etc) */
     on(event: 'chats-update', listener: (chats: WAChatUpdate[]) => void): this;
@@ -91,6 +98,8 @@ export declare class WAConnection extends Base {
     }) => void): this;
     /** when WA sends back a pong */
     on(event: 'received-pong', listener: () => void): this;
+    /** when a user is blocked or unblockd */
+    on(event: 'blocklist-update', listener: (update: BlocklistUpdate) => void): this;
     on(event: BaileysEvent | string, listener: (json: any) => void): this;
     emit(event: BaileysEvent | string, ...args: any[]): boolean;
 }

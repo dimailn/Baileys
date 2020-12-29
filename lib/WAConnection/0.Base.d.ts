@@ -45,6 +45,7 @@ export declare class WAConnection extends EventEmitter {
     contacts: {
         [k: string]: WAContact;
     };
+    blocklist: string[];
     /** Data structure of tokens & IDs used to establish one's identiy to WhatsApp Web */
     protected authInfo: AuthenticationCredentials;
     /** Curve keys to initially authenticate */

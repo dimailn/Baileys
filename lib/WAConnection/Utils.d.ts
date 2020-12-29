@@ -4,6 +4,7 @@ import { Agent } from 'https';
 import Decoder from '../Binary/Decoder';
 import { MessageType, MessageOptions, WAChat, WAMessageContent, WAMessageProto, WAMessage, WAMessageKey } from './Constants';
 import KeyedDB from '@adiwajshing/keyed-db';
+import { Response } from 'node-fetch';
 export declare const Browsers: {
     ubuntu: (browser: any) => [string, string, string];
     macOS: (browser: any) => [string, string, string];
@@ -25,7 +26,9 @@ export declare const GET_MESSAGE_ID: (key: WAMessageKey) => string;
 export declare const whatsappID: (jid: string) => string;
 export declare const isGroupID: (jid: string) => boolean;
 export declare const newMessagesDB: (messages?: WAMessage[]) => KeyedDB<WAMessageProto.WebMessageInfo, string>;
-export declare function shallowChanges<T>(old: T, current: T): Partial<T>;
+export declare function shallowChanges<T>(old: T, current: T, { lookForDeletedKeys }: {
+    lookForDeletedKeys: boolean;
+}): Partial<T>;
 /** decrypt AES 256 CBC; where the IV is prefixed to the buffer */
 export declare function aesDecrypt(buffer: Buffer, key: Buffer): Buffer;
 /** decrypt AES 256 CBC */
@@ -69,5 +72,5 @@ export declare function generateThumbnail(buffer: Buffer, mediaType: MessageType
  * Decode a media message (video, image, document, audio) & return decrypted buffer
  * @param message the media message you want to decode
  */
-export declare function decodeMediaMessageBuffer(message: WAMessageContent, fetchRequest: (host: string, method: string) => any): Promise<Buffer>;
+export declare function decodeMediaMessageBuffer(message: WAMessageContent, fetchRequest: (host: string, method: string) => Promise<Response>): Promise<Buffer>;
 export declare function extensionForMediaMessage(message: WAMessageContent): string;

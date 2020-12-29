@@ -12,8 +12,19 @@ export declare class WAConnection extends Base {
     sendMessage(id: string, message: string | WATextMessage | WALocationMessage | WAContactMessage | Buffer, type: MessageType, options?: MessageOptions): Promise<WAMessageProto.WebMessageInfo>;
     /** Prepares a message for sending via sendWAMessage () */
     prepareMessage(id: string, message: string | WATextMessage | WALocationMessage | WAContactMessage | Buffer, type: MessageType, options?: MessageOptions): Promise<WAMessageProto.WebMessageInfo>;
+    /**
+     * Toggles disappearing messages for the given chat
+     *
+     * @param jid the chat to toggle
+     * @param ephemeralExpiration 0 to disable, enter any positive number to enable disappearing messages for the specified duration;
+     * For the default see WA_DEFAULT_EPHEMERAL
+     */
+    toggleDisappearingMessages(jid: string, ephemeralExpiration?: number, opts?: {
+        waitForAck: boolean;
+    }): Promise<WAMessageProto.WebMessageInfo>;
     /** Prepares the message content */
     prepareMessageContent(message: string | WATextMessage | WALocationMessage | WAContactMessage | Buffer, type: MessageType, options: MessageOptions): Promise<WAMessageProto.Message>;
+    prepareDisappearingMessageSettingContent(ephemeralExpiration?: number): WAMessageProto.Message;
     /** Prepare a media message for sending */
     prepareMessageMedia(buffer: Buffer, mediaType: MessageType, options?: MessageOptions): Promise<WAMessageProto.Message>;
     /** prepares a WAMessage for sending from the given content & options */

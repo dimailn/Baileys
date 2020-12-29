@@ -65,4 +65,12 @@ export declare class WAConnection extends Base {
      * @param img
      */
     updateProfilePicture(jid: string, img: Buffer): Promise<WAProfilePictureChange>;
+    /**
+     * Add or remove user from blocklist
+     * @param jid the ID of the person who you are blocking/unblocking
+     * @param type type of operation
+     */
+    blockUser(jid: string, type?: 'add' | 'remove'): Promise<{
+        status: number;
+    }>;
 }
